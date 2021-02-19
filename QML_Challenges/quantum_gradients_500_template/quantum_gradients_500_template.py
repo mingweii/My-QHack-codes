@@ -29,38 +29,13 @@ def natural_gradient(params):
         np.ndarray: The natural gradient evaluated at the input parameters, of dimension 6
     """
 
-    natural_grad = np.zeros([6], dtype=np.float64)
+    natural_grad = np.zeros(6)
 
     # QHACK #
-    gradient = np.zeros([6], dtype=np.float64)
 
-    for i in range(len(params)):
-        shifted = params.copy()
-        shifted[i] += np.pi/2
-        forward = qnode(shifted)  # forward evaluation:f(theta+s e_i)
-
-        shifted[i] -= np.pi
-        backward = qnode(shifted) # backward evaluation: f(theta-s e_i)
-        gradient[i]= 0.5 * (forward - backward)
-    @qml.qnode(dev)
-    def qnode_shifted(params,i,j,s1,s2):
-        shifted=params.copy()
-        shifted[i] += s1
-        shifted[j] += s2
-
-        variational_circuit(shifted)
-
-        return qml.expval(qml.PauliX(1))
-    F=np.zeros([6,6])
-    for i in range(len(params)):
-        for j in range(len(params)):
-            #if i==j:
-            #    F[j,j]=-0.25*(qnode_shifted(params,j,j,np.pi/2,np.pi/2))
-            F[i,j]=0.125*(-qnode_shifted(params,i,j,np.pi/2,np.pi/2)+qnode_shifted(params,i,j,np.pi/2,-np.pi/2)+qnode_shifted(params,i,j,-np.pi/2,np.pi/2)-qnode_shifted(params,i,j,-np.pi/2,-np.pi/2))
-    natural_grad=np.linalg.pinv(F)@gradient
     # QHACK #
+
     return natural_grad
-
 
 
 def non_parametrized_layer():
@@ -109,7 +84,6 @@ def qnode(params):
     """
     variational_circuit(params)
     return qml.expval(qml.PauliX(1))
-
 
 
 if __name__ == "__main__":
