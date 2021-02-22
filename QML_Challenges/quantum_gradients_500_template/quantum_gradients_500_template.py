@@ -50,13 +50,19 @@ def natural_gradient(params):
 
         variational_circuit(shifted)
 
-        return qml.expval(qml.PauliX(1))
+        return qml.state()#qml.expval(qml.PauliX(1))
+
     F=np.zeros([6,6])
-    for i in range(len(params)):
-        for j in range(len(params)):
-            #if i==j:
-            #    F[j,j]=-0.25*(qnode_shifted(params,j,j,np.pi/2,np.pi/2))
-            F[i,j]=0.125*(-qnode_shifted(params,i,j,np.pi/2,np.pi/2)+qnode_shifted(params,i,j,np.pi/2,-np.pi/2)+qnode_shifted(params,i,j,-np.pi/2,np.pi/2)-qnode_shifted(params,i,j,-np.pi/2,-np.pi/2))
+    for j in range(len(params)):
+        for i in range(len(params)):
+            F[i,j]=0.125*(-np.abs(np.conjugate(np.transpose(qnode_shifted(params,i,j,0,0)))@qnode_shifted(params,i,j, np.pi/2, np.pi/2))**2
+                          +np.abs(np.conjugate(np.transpose(qnode_shifted(params,i,j,0,0)))@qnode_shifted(params,i,j, np.pi/2,-np.pi/2))**2
+                          +np.abs(np.conjugate(np.transpose(qnode_shifted(params,i,j,0,0)))@qnode_shifted(params,i,j,-np.pi/2, np.pi/2))**2
+                          -np.abs(np.conjugate(np.transpose(qnode_shifted(params,i,j,0,0)))@qnode_shifted(params,i,j,-np.pi/2,-np.pi/2))**2)
+    #natural_grad=np.linalg.pinv(F)@gradient
+    #print(np.round(F,8))
+    #print()
+    #print(qml.metric_tensor(qnode)(params))
     natural_grad=np.linalg.pinv(F)@gradient
     # QHACK #
     return natural_grad

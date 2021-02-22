@@ -69,7 +69,42 @@ def run_vqe(H):
     # Create a quantum device, set up a cost funtion and optimizer, and run the VQE.
     # (We recommend ~500 iterations to ensure convergence for this problem,
     # or you can design your own convergence criteria)
+    dev=qml.device('default.qubit',wires=H.wires)
+    #variational_ansatz(params,H.wires)
+    cost_fn=qml.ExpvalCost(variational_ansatz,H,dev)
 
+    eta=0.1
+
+    opt = qml.AdamOptimizer(stepsize=eta)#GradientDescentOptimizer(eta)
+
+    max_iterations= 600
+    conv_tol=1e-6
+
+    for n in range(max_iterations):
+        params, prev_energy = opt.step_and_cost(cost_fn,params)
+        energy = cost_fn(params)
+        conv= np.abs(energy - prev_energy)
+        #if n % 20 == 0:
+        #    print('Iteration = {:},  Energy = {:.8f} Ha'.format(n, energy))
+        if 1e-4<=conv<1e-2:
+            opt.update_stepsize(0.05)
+        elif conv_tol<conv<1e-4:
+            opt.update_stepsize(0.01)
+        elif conv <= conv_tol:
+            break
+        else:
+            continue
+
+
+
+    #print()
+    #print('Final convergence parameter = {:.8f} Ha'.format(conv))
+    #print('Final value of the ground-state energy = {:.8f} Ha'.format(energy))
+    #print('Accuracy with respect to the FCI energy: {:.8f} Ha ({:.8f} kcal/mol)'.format(
+    #np.abs(energy - (-1.136189454088)), np.abs(energy - (-1.136189454088))*627.503
+    #))
+    #print()
+    #print('Final circuit parameters = \n', params)
     # QHACK #
 
     # Return the ground state energy
