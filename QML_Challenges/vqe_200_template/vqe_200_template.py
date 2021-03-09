@@ -3,8 +3,7 @@
 import sys
 import pennylane as qml
 import numpy as np
-
-
+from pennylane import numpy as npx
 def variational_ansatz(params, wires):
     """The variational ansatz circuit.
 
@@ -21,7 +20,25 @@ def variational_ansatz(params, wires):
     """
 
     # QHACK #
+    N=len(wires)
 
+    qml.PauliX(wires=0)
+
+    for i, param in enumerate(params):
+        qml.RY(-param, wires=i+1)
+        qml.CZ(wires=[i+1,i])
+        qml.RY(param,wires=i+1)
+
+    # Reversed CNOTs
+    for i in range(len(params)):
+        qml.Hadamard(wires=i)
+        qml.Hadamard(wires=i+1)
+        qml.CNOT(wires=[i,i+1])
+        qml.Hadamard(wires=i)
+        qml.Hadamard(wires=i+1)
+
+
+    #qml.QubitStateVector(npx.array(params,requires_grad=False),wires=wires)
     # QHACK #
 
 
@@ -42,15 +59,49 @@ def run_vqe(H):
     # QHACK #
 
     # Initialize the quantum device
+    dev=qml.device('default.qubit',wires=H.wires)
 
     # Randomly choose initial parameters (how many do you need?)
+    num_qubits = len(H.wires)
+
+    params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=num_qubits-1)
 
     # Set up a cost function
 
+    cost_fn=qml.ExpvalCost(variational_ansatz,H,dev)
+
     # Set up an optimizer
-
+    eta=0.2
+    opt = qml.AdamOptimizer(stepsize=eta)
+    max_iterations= 500
     # Run the VQE by iterating over many steps of the optimizer
+    conv_tol=1e-6
 
+    for n in range(max_iterations):
+        #print(params)
+        params, prev_energy = opt.step_and_cost(cost_fn,params)
+        #print(params)
+        energy = cost_fn((params))
+        conv= np.abs(energy - prev_energy)
+        #if n % 20 == 0:
+        #print('Iteration = {:},  Energy = {:.8f}, Convergence={:.8f} Ha'.format(n, energy,conv))
+        if 1e-4<=conv<1e-2:
+            opt.update_stepsize(0.05)
+        elif conv_tol<conv<1e-4:
+            opt.update_stepsize(0.01)
+        elif conv <= conv_tol:
+            break
+        else:
+            continue
+
+    #print()
+    #print('Final convergence parameter = {:.8f} Ha'.format(conv))
+    #print('Final value of the ground-state energy = {:.8f} Ha'.format(energy))
+    #print('Accuracy with respect to the FCI energy: {:.8f} Ha ({:.8f} kcal/mol)'.format(
+    #np.abs(energy - (-1.136189454088)), np.abs(energy - (-1.136189454088))*627.503
+    #))
+    #print()
+    #print('Final circuit parameters = \n', params)
     # QHACK #
 
     # Return the ground state energy

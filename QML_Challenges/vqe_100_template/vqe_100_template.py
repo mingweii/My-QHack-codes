@@ -73,27 +73,27 @@ def run_vqe(H):
     #variational_ansatz(params,H.wires)
     cost_fn=qml.ExpvalCost(variational_ansatz,H,dev)
 
-    eta=0.1
+    eta=0.4
 
     opt = qml.AdamOptimizer(stepsize=eta)#GradientDescentOptimizer(eta)
 
-    max_iterations= 600
+    max_iterations= 100
     conv_tol=1e-6
 
     for n in range(max_iterations):
         params, prev_energy = opt.step_and_cost(cost_fn,params)
         energy = cost_fn(params)
-        conv= np.abs(energy - prev_energy)
+        conv= np.abs((energy - prev_energy)/energy)
         #if n % 20 == 0:
         #    print('Iteration = {:},  Energy = {:.8f} Ha'.format(n, energy))
-        if 1e-4<=conv<1e-2:
-            opt.update_stepsize(0.05)
-        elif conv_tol<conv<1e-4:
-            opt.update_stepsize(0.01)
-        elif conv <= conv_tol:
+        #if 1e-4<=conv<1e-2:
+        #    opt.update_stepsize(0.05)
+        #elif conv_tol<conv<1e-4:
+        #    opt.update_stepsize(0.01)
+        if conv <= conv_tol:
             break
-        else:
-            continue
+        #else:
+        #    continue
 
 
 

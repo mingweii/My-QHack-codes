@@ -30,6 +30,72 @@ def classify_data(X_train, Y_train, X_test):
 
     # QHACK #
 
+    #import time
+    #init_time=time.time()
+    dev = qml.device("default.qubit", wires=3)
+
+    @qml.qnode(dev)
+    def circuit(params, x, depth=1):
+        params = np.reshape(params,[3,3,depth])
+
+        for layer in range(depth):
+            qml.Rot(*x, wires=0)
+            qml.Rot(*x, wires=1)
+            qml.Rot(*x, wires=2)
+
+            qml.Rot(*params[0,:,layer], wires=0)
+            qml.Rot(*params[1,:,layer], wires=1)
+            qml.Rot(*params[2,:,layer], wires=2)
+
+        return [qml.expval(qml.PauliX(wires=0)), qml.expval(qml.PauliX(wires=1)), qml.expval(qml.PauliX(wires=2))]
+
+    def cost(params, x, y, depth):
+        batch_loss = []
+        label_dict = {
+            1: [1, 0, 0],
+            0: [0, 1, 0],
+            -1: [0, 0, 1]
+        }
+
+        for i in range(len(x)):
+            predict = circuit(params, x[i], depth=depth)
+            label = label_dict[y[i]]
+
+            loss = 0
+            for l,p in zip(label,predict):
+                loss += (l - p) ** 2
+            loss = loss / len(label)
+
+            batch_loss.append(loss)
+
+        return sum(batch_loss)
+
+    def batch_generator(X_batch, Y_batch, batch_size):
+        for start_idx in range(0, X_batch.shape[0] - batch_size + 1, batch_size):
+            yield X_batch[start_idx:start_idx+batch_size], Y_batch[start_idx:start_idx+batch_size]
+
+    num_layers = 2
+    eta = 0.1
+    num_iterations = 10
+    batch_size = 5
+
+    opt = qml.AdamOptimizer(stepsize=eta)
+
+    num_param_sets= 9 * num_layers
+    params = np.random.uniform(low=0, high=np.pi,size=num_param_sets)
+
+    for it in range(num_iterations):
+        for Xbatch, ybatch in batch_generator(X_train, Y_train, batch_size=batch_size):
+            params = opt.step(lambda v: cost(v, Xbatch, ybatch, num_layers), params)
+
+    label_dict = {0:  1,
+                  1:  0,
+                  2: -1}
+    for x in X_test:
+        pred = circuit(params, x, depth=num_layers)
+        label = label_dict[np.argmax(pred)]
+        predictions.append(label)
+    #print('Time: ',time.time()-init_time)
     # QHACK #
 
     return array_to_concatenated_string(predictions)
