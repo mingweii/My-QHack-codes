@@ -1,3 +1,7 @@
+My ranking:
+![image](https://media-exp1.licdn.com/dms/image/C4D22AQFrWozRNJVECQ/feedshare-shrink_1280/0/1614177198005?e=1619654400&v=beta&t=FPOuRNUtr20WMgdIOqFFe4P89TX2vEs30hkFsHPSwZo)
+
+
 ![image](img/qhack-banner.png)
 
 Welcome to [QHack](https://qhack.ai), the quantum machine learning hackathon! We're thrilled to have the opportunity to meet and work with such a large and diverse group of participants, and we look forward to interacting with you all during the event.
