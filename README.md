@@ -1,4 +1,4 @@
-My ranking:
+The screenshot of my ranking:
 ![image](https://media-exp1.licdn.com/dms/image/C4D22AQFrWozRNJVECQ/feedshare-shrink_1280/0/1614177198005?e=1619654400&v=beta&t=FPOuRNUtr20WMgdIOqFFe4P89TX2vEs30hkFsHPSwZo)
 
 
